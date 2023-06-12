@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\WEB\CategoryController;
+use App\Http\Controllers\WEB\FrontEndController;
+use App\Http\Controllers\WEB\MyTransactionController;
 use App\Http\Controllers\WEB\ProductController;
 use App\Http\Controllers\WEB\ProductGalleryController;
 use App\Http\Controllers\WEB\TransactionController;
+use App\Http\Controllers\WEB\UserController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,11 +21,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Route::get('/', [FrontEndController::class, 'index']);
+Route::get('/detail-product/{slug}', [FrontEndController::class, 'detailProducts'])->name('detailProduct');
+Route::get('/detail-category/{slug}', [FrontEndController::class, 'detailCategory'])->name('detailCategory');
 
 Auth::routes();
+
+Route::middleware(['auth', 'verified'])->group(function (){
+    Route::get('/cart', [FrontEndController::class, 'cart'])->name('cart');
+    Route::post('/cart/{id}', [FrontEndController::class, 'cartStore'])->name('cartStore');
+    Route::delete('/cart/{id}', [FrontEndController::class, 'cartDelete'])->name('cartDelete');
+    Route::post('/checkout', [FrontEndController::class, 'checkout'])->name('checkout');
+});
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
@@ -32,6 +47,8 @@ Route::middleware(['auth'])->name('dashboard.')
         // category.index => sebelum ada name route('dashboard.')
         // dashboard.category.index => setelah ada name route('dashboard.')
 
+        Route::resource('/my-transaction', MyTransactionController::class);
+
         Route::middleware(['admin'])->group(function () {
             //Route yang ada didalam middleware admin maka 
             // yang bisa mengakses hanya admin
@@ -40,6 +57,11 @@ Route::middleware(['auth'])->name('dashboard.')
             Route::resource('/product.gallery', ProductGalleryController::class)->only([
                 'index', 'create', 'store', 'destroy'
             ]);
-            Route::resource('/transaction', TransactionController::class);
+            Route::resource('/transaction', TransactionController::class)->only([
+                'index', 'show', 'edit', 'update'
+            ]);
+            Route::resource('/user', UserController::class)->only([
+                'index', 'edit', 'update', 'destroy'
+            ]);
         });
     });

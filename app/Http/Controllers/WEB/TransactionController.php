@@ -73,9 +73,14 @@ class TransactionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Transaction $transaction)
     {
-        //
+        // Fungsi yang menampilkan halaman edit data
+
+        // get data transaction
+        return view('pages.admin.transaction.edit', compact(
+            'transaction'
+        ));
     }
 
     /**
@@ -85,9 +90,30 @@ class TransactionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Transaction $transaction)
     {
-        //
+        // validasi data
+        $request->validate([
+            'status'    => 'required|in:PENDING,SUCCESS,FAILED,SHIPPING,SHIPPED'
+        ]);
+
+        // update data
+        $transaction->update([
+            'status'    => $request->status
+        ]);
+
+        // redirect kehalaman index
+        if ($transaction) {
+            //redirect dengan pesan sukses
+            return redirect()->route('dashboard.transaction.index')->with([
+                'success' => 'Data Transaksi Berhasil DiUpdate!'
+            ]);
+        } else {
+            //redirect dengan pesan error
+            return redirect()->route('dashboard.transaction.index')->with([
+                'error' => 'Data Transaksi Gagal DiUpdate!'
+            ]);
+        }
     }
 
     /**
